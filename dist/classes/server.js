@@ -7,7 +7,8 @@ const express_1 = __importDefault(require("express"));
 class Server {
     constructor() {
         this.port = 3000;
-        this.app = (0, express_1.default)().use(express_1.default.json());
+        this.app = (0, express_1.default)()
+            .use(express_1.default.json());
     }
     start(callback) {
         this.app.listen(this.port, callback);

@@ -22,19 +22,20 @@ const userSchema = new Schema({
         required: [true, "Password is required"]
 
     }
-});
+},
+{ versionKey: false }
+);
 
 userSchema.method('comparePassword', function( password: string): boolean {
     return bcrypt.compareSync( password, this.password) ? true : false;
 });
 
-
-
 export interface IUser extends Document {
-    nombre: string,
+    name: string,
     email: string,
     password: string,
-    comparePassword: (password: string) => boolean
+    comparePassword: (password: string) => boolean,
+    avatar: string
 }
 
 export const User = model<IUser>('User', userSchema);
