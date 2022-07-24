@@ -1,16 +1,25 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const user_model_1 = require("../models/user.model");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const token_1 = __importDefault(require("../classes/token"));
 const auth_1 = require("../middlewares/auth");
+const user_controller_1 = __importDefault(require("../controllers/user.controller"));
 const userRoutes = (0, express_1.Router)();
+const controller = new user_controller_1.default();
 //Create user
-userRoutes.post('/create', (req, res) => {
+userRoutes.post('/create', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { body: { name, email, password, avatar } } = req;
     const user = {
         name,
@@ -18,71 +27,23 @@ userRoutes.post('/create', (req, res) => {
         password: bcrypt_1.default.hashSync(password, 10),
         avatar: avatar || 'av-0.png'
     };
-    user_model_1.User.create(user).then(() => {
-        res.json({
-            msg: "it works",
-            ok: true,
-            user
-        });
-    }).catch(err => {
-        res.json({
-            ok: false,
-            err
-        });
-    });
-});
+    const { response, statusCode } = yield controller.create(user);
+    res.status(statusCode).json(response);
+}));
 //Login
-userRoutes.post('/login', (req, res) => {
+userRoutes.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { body: { email, password } } = req;
-    user_model_1.User.findOne({ email }, (err, userDB) => {
-        if (err)
-            throw err;
-        if (!userDB) {
-            res.json({
-                ok: false,
-                msg: "Wrong email or Password"
-            });
-        }
-        if (userDB.comparePassword(password)) {
-            const { name, avatar, email, _id } = userDB;
-            const userToken = token_1.default.getJwtToken({
-                name,
-                avatar,
-                email,
-                _id
-            });
-            res.json({
-                ok: true,
-                msg: "Logged",
-                token: userToken
-            });
-        }
-        else {
-            res.json({
-                ok: true,
-                msg: "invalid password"
-            });
-        }
-    });
-});
+    const { response, statusCode } = yield controller.login(email, password);
+    res.status(statusCode).json(response);
+}));
 //update
-userRoutes.put('/update', [auth_1.checkTokenMdw], (req, res) => {
+userRoutes.put('/update', [auth_1.checkTokenMdw], (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { _id } = req.user;
-    user_model_1.User.findByIdAndUpdate(_id, Object.assign({}, req.body), (err, userDB) => {
-        if (!err) {
-            const { _id, name, email, avatar } = userDB;
-            res.json({
-                ok: userDB ? true : false,
-                msg: userDB ? "user has been updated" : "user not found",
-                token: userDB ? token_1.default.getJwtToken({ _id, name, email, avatar }) : ''
-            });
-        }
-        else {
-            res.json({
-                ok: false,
-                error: err
-            });
-        }
-    });
+    const { response, statusCode } = yield controller.update(_id, req.body);
+    res.status(statusCode).json(response);
+}));
+userRoutes.get('/', [auth_1.checkTokenMdw], (req, res) => {
+    const { response, statusCode } = controller.getInfo(req.user);
+    res.status(statusCode).json(response);
 });
 exports.default = userRoutes;

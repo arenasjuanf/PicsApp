@@ -4,5 +4,6 @@ export interface IFileUpload {
     encodeing: string,
     tempFilePath: string,
     truncated: boolean,
-    mimetype: string
+    mimetype: string,
+    mv: Function
 }

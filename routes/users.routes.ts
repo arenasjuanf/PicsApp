@@ -3,12 +3,13 @@ import { User, IUser } from "../models/user.model";
 import bcrypt from "bcrypt";
 import Token from "../classes/token";
 import { checkTokenMdw } from "../middlewares/auth";
+import UserController from "../controllers/user.controller";
 
 const userRoutes = Router();
+const controller = new UserController();
 
 //Create user
-userRoutes.post('/create', (req: Request, res : Response) => {
-
+userRoutes.post('/create', async (req: Request, res : Response) => {
     const {body: {name, email, password, avatar}} = req;
 
     const user = {
@@ -17,81 +18,31 @@ userRoutes.post('/create', (req: Request, res : Response) => {
         password: bcrypt.hashSync(password, 10) ,
         avatar: avatar || 'av-0.png'
     };
-
-    User.create( user ).then(() => {
-        res.json({
-            msg: "it works",
-            ok: true,
-            user
-        })
-    }).catch(err => {
-        res.json({
-            ok: false,
-            err
-        });
-    })
-
     
+    const {response, statusCode} = await controller.create(user);
+    
+    res.status(statusCode).json(response);
 });
 
 //Login
-userRoutes.post('/login',  (req: Request, res : Response) => {
+userRoutes.post('/login',  async (req: Request, res : Response) => {
     const {body: {email, password}} = req;
-
-    User.findOne({email}, (err: any, userDB: IUser) => {
-        if(err) throw err;
-
-        if(!userDB){
-            res.json({
-                ok: false,
-                msg: "Wrong email or Password"
-            });
-        }
-
-        if(userDB.comparePassword(password)){
-
-            const {name, avatar, email, _id} = userDB;
-
-            const userToken = Token.getJwtToken({
-                name, 
-                avatar,
-                email,
-                _id
-            });
-
-            res.json({
-                ok: true,
-                msg: "Logged",
-                token: userToken
-            });
-        }else{
-            res.json({
-                ok: true,
-                msg: "invalid password"
-            });
-        }
-    })
+    const {response, statusCode} = await controller.login(email, password);
+    res.status(statusCode).json(response);
 });
 
 //update
-userRoutes.put('/update', [checkTokenMdw], (req: any, res : Response) => {
+userRoutes.put('/update', [checkTokenMdw], async(req: any, res : Response) => {
     const {_id} = req.user;
-    User.findByIdAndUpdate(_id, {...req.body},(err: any, userDB: any) => {
-        if(!err){
-            const {_id, name, email, avatar } = userDB;
-            res.json({
-                ok: userDB ? true : false,
-                msg: userDB ? "user has been updated" : "user not found",
-                token: userDB ? Token.getJwtToken({_id, name, email, avatar }) : ''
-            });
-        }
-        else{
-            res.json({
-                ok: false,
-                error: err
-            });
-        }
-    })   
+    const {response, statusCode} = await controller.update(_id, req.body);
+    res.status(statusCode).json(response);
 });
+
+
+userRoutes.get('/', [checkTokenMdw],(req: any, res: Response) => {
+    const {response, statusCode} = controller.getInfo(req.user);
+    res.status(statusCode).json(response);
+})
+
 
 export default userRoutes;
