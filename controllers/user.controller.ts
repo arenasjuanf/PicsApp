@@ -1,4 +1,5 @@
 import Token from "../classes/token";
+import bcrypt from "bcrypt";
 import { IResponse } from "../interfaces/response";
 import { User, IUser } from "../models/user.model";
 
@@ -9,6 +10,7 @@ export default class UserController {
 
     async create(data: Partial<IUser>): Promise<IResponse>{
         try{
+            data.password = bcrypt.hashSync(data.password as string, 10);
             await User.create( data );
             delete data.password;
             return {

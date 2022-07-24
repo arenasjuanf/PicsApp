@@ -1,7 +1,4 @@
 import { Router, Request, Response } from "express";
-import { User, IUser } from "../models/user.model";
-import bcrypt from "bcrypt";
-import Token from "../classes/token";
 import { checkTokenMdw } from "../middlewares/auth";
 import UserController from "../controllers/user.controller";
 
@@ -15,7 +12,7 @@ userRoutes.post('/create', async (req: Request, res : Response) => {
     const user = {
         name,
         email, 
-        password: bcrypt.hashSync(password, 10) ,
+        password,
         avatar: avatar || 'av-0.png'
     };
     

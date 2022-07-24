@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import Token from "../classes/token";
 
 export const checkTokenMdw = (req: any, res: Response, next: NextFunction) => {
